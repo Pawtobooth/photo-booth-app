@@ -27,10 +27,14 @@ export default function CameraPreview({
     let count = 5;
     setCountdown(count);
     
+    // Play countdown beep sound
+    playCountdownBeep();
+    
     const countdownInterval = setInterval(() => {
       count--;
       if (count > 0) {
         setCountdown(count);
+        playCountdownBeep();
       } else {
         clearInterval(countdownInterval);
         handleCapture();
@@ -38,8 +42,35 @@ export default function CameraPreview({
     }, 1000);
   };
 
+  const playCountdownBeep = () => {
+    // Create countdown beep sound
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Countdown beep - shorter and softer than camera sound
+      oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+      
+      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (error) {
+      console.log('Audio context not available');
+    }
+  };
+
   const handleCapture = async () => {
     try {
+      // Play camera shutter sound
+      playCameraSound();
+      
       // Flash effect
       setShowFlash(true);
       setTimeout(() => setShowFlash(false), 300);
@@ -56,6 +87,32 @@ export default function CameraPreview({
       console.error('Failed to capture photo:', error);
     } finally {
       setIsCountingDown(false);
+    }
+  };
+
+  const playCameraSound = () => {
+    // Create camera shutter sound using Web Audio API
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Create a short beep sound for camera capture
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Camera shutter sound - quick high-pitched beep
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.2);
+    } catch (error) {
+      console.log('Audio context not available');
     }
   };
 
@@ -103,10 +160,10 @@ export default function CameraPreview({
           
           {/* Countdown Overlay */}
           {isCountingDown && (
-            <div className="countdown-overlay absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}>
               <div className="text-center">
-                <div className="text-8xl font-bold text-white mb-4">{countdown}</div>
-                <div className="text-xl text-white">Get ready!</div>
+                <div className="text-8xl font-bold text-white mb-4 drop-shadow-lg">{countdown}</div>
+                <div className="text-xl text-white drop-shadow-md">Get ready!</div>
               </div>
             </div>
           )}
