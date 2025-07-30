@@ -116,38 +116,7 @@ export async function generatePhotoLayout(
     ctx.font = "16px Arial, sans-serif";
     ctx.fillText("four dimensions of life", canvas.width / 2, 70);
 
-    // Add Pawtobooth logo at bottom right corner (like reference)
-    ctx.fillStyle = "#FF5722";
-    ctx.font = "bold 18px Arial, sans-serif";
-    ctx.textAlign = "right";
-    ctx.textBaseline = "bottom";
-    
-    const logoX = canvas.width - 40;
-    const logoY = canvas.height - 20;
-    
-    // Add logo background (white rounded rectangle with fallback)
-    const logoText = "Pawtobooth";
-    const textMetrics = ctx.measureText(logoText);
-    const logoWidth = textMetrics.width + 20;
-    const logoHeight = 30;
-    
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    try {
-      if (ctx.roundRect) {
-        ctx.roundRect(logoX - logoWidth, logoY - logoHeight, logoWidth, logoHeight, 15);
-      } else {
-        ctx.rect(logoX - logoWidth, logoY - logoHeight, logoWidth, logoHeight);
-      }
-      ctx.fill();
-    } catch (error) {
-      // Simple fallback
-      ctx.fillRect(logoX - logoWidth, logoY - logoHeight, logoWidth, logoHeight);
-    }
-    
-    // Add logo text
-    ctx.fillStyle = "#FF5722";
-    ctx.fillText(logoText, logoX - 10, logoY - 8);
+
 
     return canvas.toDataURL('image/png', 1.0);
   } catch (error) {
