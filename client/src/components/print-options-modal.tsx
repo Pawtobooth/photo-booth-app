@@ -68,13 +68,29 @@ export default function PrintOptionsModal({
           <head>
             <title>Pawtobooth Print</title>
             <style>
+              @page {
+                margin: 0;
+                size: auto;
+              }
               @media print {
-                body { margin: 0; padding: 0; }
-                img { width: 100%; height: auto; page-break-inside: avoid; }
+                body { 
+                  margin: 0; 
+                  padding: 0; 
+                  background: white !important;
+                  -webkit-print-color-adjust: exact;
+                  color-adjust: exact;
+                }
+                img { 
+                  width: 100%; 
+                  height: auto; 
+                  page-break-inside: avoid;
+                  display: block;
+                }
+                @page { margin: 0; }
               }
               body {
                 margin: 0;
-                padding: 20px;
+                padding: 0;
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -83,14 +99,13 @@ export default function PrintOptionsModal({
               }
               img {
                 max-width: 100%;
-                max-height: 100vh;
+                height: auto;
                 object-fit: contain;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
               }
             </style>
           </head>
           <body>
-            <img src="${layoutPreview}" alt="Pawtobooth Photos" onload="window.print();" />
+            <img src="${layoutPreview}" alt="Pawtobooth Photos" onload="setTimeout(() => { window.print(); window.close(); }, 500);" />
           </body>
         </html>
       `);
