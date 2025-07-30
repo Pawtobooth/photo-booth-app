@@ -70,7 +70,7 @@ export default function PrintOptionsModal({
             <style>
               @page {
                 margin: 0;
-                size: auto;
+                size: ${sessionState.selectedFormat === 'photo-strip' ? '2in 6in' : '6in 4in'};
               }
               @media print {
                 body { 
@@ -81,16 +81,18 @@ export default function PrintOptionsModal({
                   color-adjust: exact;
                 }
                 img { 
-                  width: 100%; 
-                  height: auto; 
+                  ${sessionState.selectedFormat === 'photo-strip' 
+                    ? 'width: 2in; height: 6in;' 
+                    : 'width: 6in; height: 4in;'
+                  }
                   page-break-inside: avoid;
                   display: block;
+                  object-fit: contain;
                 }
-                @page { margin: 0; }
               }
               body {
                 margin: 0;
-                padding: 0;
+                padding: 20px;
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -98,9 +100,12 @@ export default function PrintOptionsModal({
                 background: white;
               }
               img {
-                max-width: 100%;
-                height: auto;
+                ${sessionState.selectedFormat === 'photo-strip' 
+                  ? 'max-width: 200px; max-height: 600px;' 
+                  : 'max-width: 600px; max-height: 400px;'
+                }
                 object-fit: contain;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
               }
             </style>
           </head>
@@ -166,11 +171,13 @@ export default function PrintOptionsModal({
             <h3 className="text-lg font-semibold">Preview</h3>
             <Card className="p-4 bg-gray-50">
               {layoutPreview ? (
-                <img 
-                  src={layoutPreview} 
-                  alt="Print preview"
-                  className="w-full max-h-96 object-contain rounded-lg shadow-lg"
-                />
+                <div className={`${sessionState.selectedFormat === 'photo-strip' ? 'max-w-[200px] mx-auto' : 'w-full'}`}>
+                  <img 
+                    src={layoutPreview} 
+                    alt="Print preview"
+                    className={`${sessionState.selectedFormat === 'photo-strip' ? 'w-full h-auto' : 'w-full max-h-96'} object-contain rounded-lg shadow-lg`}
+                  />
+                </div>
               ) : (
                 <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
                   <div className="text-gray-500">Generating preview...</div>
