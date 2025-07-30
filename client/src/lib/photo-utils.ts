@@ -141,7 +141,7 @@ export async function generatePhotoLayout(
       });
       
       // Add Pawtobooth logo at bottom (like reference image)
-      ctx.fillStyle = "#FF5722"; // Orange color
+      ctx.fillStyle = backgroundColor === "white" ? "#333333" : "#FFFFFF"; // White on black background, dark on white
       ctx.font = "bold 24px Arial, sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
