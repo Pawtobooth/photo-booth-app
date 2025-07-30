@@ -93,28 +93,77 @@ export async function generatePhotoLayout(
         }
       });
     } else {
-      // Draw photos in vertical strip
-      const photoWidth = canvas.width - 80; // 40px margins on each side
-      const photoHeight = (canvas.height - 160) / 4; // 80px top/bottom margins, 40px for logo
+      // Photo strip layout (2" x 6") - matching reference image exactly
+      const margin = 20; // Small margin from edges
+      const logoSpace = 100; // Space for logo at bottom
+      const photoSpacing = 10; // Small gap between photos
       
+      const photoWidth = canvas.width - (2 * margin);
+      const availableHeight = canvas.height - margin - logoSpace - (3 * photoSpacing); // Space for 4 photos + 3 gaps
+      const photoHeight = availableHeight / 4;
+      
+      // Draw photos stacked vertically like reference image
       images.forEach((img, index) => {
-        const y = 80 + index * photoHeight;
-        ctx.drawImage(img, 40, y, photoWidth, photoHeight);
+        const x = margin;
+        const y = margin + index * (photoHeight + photoSpacing);
+        
+        // Draw photo with slight rounded corners
+        ctx.save();
+        try {
+          ctx.beginPath();
+          if (ctx.roundRect) {
+            ctx.roundRect(x, y, photoWidth, photoHeight, 6);
+          } else {
+            ctx.rect(x, y, photoWidth, photoHeight);
+          }
+          ctx.clip();
+          ctx.drawImage(img, x, y, photoWidth, photoHeight);
+          ctx.restore();
+          
+          // Add subtle border
+          ctx.strokeStyle = backgroundColor === "white" ? "#E0E0E0" : "#404040";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          if (ctx.roundRect) {
+            ctx.roundRect(x, y, photoWidth, photoHeight, 6);
+          } else {
+            ctx.rect(x, y, photoWidth, photoHeight);
+          }
+          ctx.stroke();
+        } catch (error) {
+          // Simple fallback
+          ctx.restore();
+          ctx.drawImage(img, x, y, photoWidth, photoHeight);
+          ctx.strokeStyle = backgroundColor === "white" ? "#E0E0E0" : "#404040";
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x, y, photoWidth, photoHeight);
+        }
       });
+      
+      // Add Pawtobooth logo at bottom (like reference image)
+      ctx.fillStyle = "#FF5722"; // Orange color
+      ctx.font = "bold 24px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      
+      const logoY = canvas.height - logoSpace / 2;
+      ctx.fillText("Pawtobooth", canvas.width / 2, logoY);
     }
 
-    // Add title at top (like "FOR YOU STUDIO" in reference)
-    ctx.fillStyle = backgroundColor === "white" ? "#333333" : "#FFFFFF";
-    ctx.font = "bold 36px Arial, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    
-    const titleText = "PAWTOBOOTH";
-    ctx.fillText(titleText, canvas.width / 2, 40);
+    // Add title at top only for 4R grid format
+    if (format === "4r-grid") {
+      ctx.fillStyle = backgroundColor === "white" ? "#333333" : "#FFFFFF";
+      ctx.font = "bold 36px Arial, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      
+      const titleText = "PAWTOBOOTH";
+      ctx.fillText(titleText, canvas.width / 2, 40);
 
-    // Add tagline below title
-    ctx.font = "16px Arial, sans-serif";
-    ctx.fillText("four dimensions of life", canvas.width / 2, 70);
+      // Add tagline below title
+      ctx.font = "16px Arial, sans-serif";
+      ctx.fillText("four dimensions of life", canvas.width / 2, 70);
+    }
 
 
 
