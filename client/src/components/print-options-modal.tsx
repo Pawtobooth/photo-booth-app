@@ -70,42 +70,56 @@ export default function PrintOptionsModal({
             <style>
               @page {
                 margin: 0;
-                size: ${sessionState.selectedFormat === 'photo-strip' ? '2in 6in' : '6in 4in'};
+                size: ${sessionState.selectedFormat === 'photo-strip' ? '2in 6in' : '4in 6in'};
               }
               @media print {
-                body { 
-                  margin: 0; 
-                  padding: 0; 
+                * {
+                  box-sizing: border-box;
+                }
+                html, body { 
+                  margin: 0 !important; 
+                  padding: 0 !important; 
+                  width: 100% !important;
+                  height: 100% !important;
                   background: white !important;
                   -webkit-print-color-adjust: exact;
                   color-adjust: exact;
+                  overflow: hidden !important;
                 }
                 img { 
                   ${sessionState.selectedFormat === 'photo-strip' 
-                    ? 'width: 2in; height: 6in;' 
-                    : 'width: 6in; height: 4in;'
+                    ? 'width: 2in !important; height: 6in !important;' 
+                    : 'width: 4in !important; height: 6in !important;'
                   }
-                  page-break-inside: avoid;
-                  display: block;
+                  max-width: none !important;
+                  max-height: none !important;
+                  page-break-inside: avoid !important;
+                  page-break-after: avoid !important;
+                  page-break-before: avoid !important;
+                  display: block !important;
                   object-fit: contain;
+                  margin: 0 !important;
+                  padding: 0 !important;
                 }
               }
-              body {
-                margin: 0;
-                padding: 20px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                min-height: 100vh;
-                background: white;
-              }
-              img {
-                ${sessionState.selectedFormat === 'photo-strip' 
-                  ? 'max-width: 200px; max-height: 600px;' 
-                  : 'max-width: 600px; max-height: 400px;'
+              @media screen {
+                body {
+                  margin: 0;
+                  padding: 20px;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  min-height: 100vh;
+                  background: white;
                 }
-                object-fit: contain;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                img {
+                  ${sessionState.selectedFormat === 'photo-strip' 
+                    ? 'max-width: 200px; max-height: 600px;' 
+                    : 'max-width: 400px; max-height: 600px;'
+                  }
+                  object-fit: contain;
+                  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                }
               }
             </style>
           </head>
