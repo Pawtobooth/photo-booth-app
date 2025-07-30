@@ -27,8 +27,11 @@ export default function CameraPreview({
     let count = 5;
     setCountdown(count);
     
-    // Play countdown beep sound
-    playCountdownBeep();
+    // Initialize audio context on user interaction
+    initAudioContext();
+    
+    // Play initial countdown beep
+    setTimeout(() => playCountdownBeep(), 100);
     
     const countdownInterval = setInterval(() => {
       count--;
@@ -42,10 +45,26 @@ export default function CameraPreview({
     }, 1000);
   };
 
+  const initAudioContext = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    } catch (error) {
+      console.log('Could not initialize audio context');
+    }
+  };
+
   const playCountdownBeep = () => {
     // Create countdown beep sound
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Resume audio context if suspended (required by some browsers)
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
       
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
@@ -55,14 +74,25 @@ export default function CameraPreview({
       
       // Countdown beep - shorter and softer than camera sound
       oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+      oscillator.type = 'sine';
       
-      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
       
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
+      oscillator.stop(audioContext.currentTime + 0.15);
     } catch (error) {
-      console.log('Audio context not available');
+      console.log('Audio context not available:', error);
+      // Fallback - try to beep using system sound
+      try {
+        // Create a short audio element as fallback
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJhfCeqbHHgdX4r4+x9rAn0Q==');
+        audio.volume = 0.3;
+        audio.play();
+      } catch (e) {
+        console.log('Fallback audio also failed');
+      }
     }
   };
 
@@ -95,24 +125,47 @@ export default function CameraPreview({
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      // Create a short beep sound for camera capture
-      const oscillator = audioContext.createOscillator();
+      // Resume audio context if suspended (required by some browsers)
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+      
+      // Create a more realistic camera shutter sound
+      const oscillator1 = audioContext.createOscillator();
+      const oscillator2 = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
-      oscillator.connect(gainNode);
+      oscillator1.connect(gainNode);
+      oscillator2.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      // Camera shutter sound - quick high-pitched beep
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+      // Two-tone shutter sound
+      oscillator1.frequency.setValueAtTime(1000, audioContext.currentTime);
+      oscillator1.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
+      oscillator1.type = 'square';
       
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+      oscillator2.frequency.setValueAtTime(1200, audioContext.currentTime);
+      oscillator2.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.1);
+      oscillator2.type = 'sawtooth';
       
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.2);
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.4, audioContext.currentTime + 0.01);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+      
+      oscillator1.start(audioContext.currentTime);
+      oscillator1.stop(audioContext.currentTime + 0.2);
+      oscillator2.start(audioContext.currentTime);
+      oscillator2.stop(audioContext.currentTime + 0.2);
     } catch (error) {
-      console.log('Audio context not available');
+      console.log('Audio context not available:', error);
+      // Fallback - try to play a simple beep
+      try {
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiB');
+        audio.volume = 0.5;
+        audio.play();
+      } catch (e) {
+        console.log('Fallback audio also failed');
+      }
     }
   };
 
