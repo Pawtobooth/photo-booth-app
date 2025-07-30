@@ -30,14 +30,17 @@ export default function PrintOptionsModal({
 
   const generatePreview = async () => {
     try {
+      console.log('Generating preview with photos:', sessionState.capturedPhotos.length);
       const preview = await generatePhotoLayout(
         sessionState.capturedPhotos.map(p => p.dataUrl),
         sessionState.selectedFormat,
         sessionState.selectedBackground
       );
+      console.log('Preview generated successfully:', preview ? 'Yes' : 'No');
       setLayoutPreview(preview);
     } catch (error) {
       console.error("Failed to generate preview:", error);
+      alert('Failed to generate print preview. Please try again.');
     }
   };
 
@@ -53,20 +56,47 @@ export default function PrintOptionsModal({
   };
 
   const handleDirectPrint = () => {
-    if (!layoutPreview) return;
+    if (!layoutPreview) {
+      alert('Print preview is still generating. Please wait a moment and try again.');
+      return;
+    }
     
     const printWindow = window.open('', '_blank');
     if (printWindow) {
       printWindow.document.write(`
         <html>
-          <head><title>Pawtobooth Print</title></head>
-          <body style="margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
-            <img src="${layoutPreview}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+          <head>
+            <title>Pawtobooth Print</title>
+            <style>
+              @media print {
+                body { margin: 0; padding: 0; }
+                img { width: 100%; height: auto; page-break-inside: avoid; }
+              }
+              body {
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                background: white;
+              }
+              img {
+                max-width: 100%;
+                max-height: 100vh;
+                object-fit: contain;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+              }
+            </style>
+          </head>
+          <body>
+            <img src="${layoutPreview}" alt="Pawtobooth Photos" onload="window.print();" />
           </body>
         </html>
       `);
       printWindow.document.close();
-      printWindow.print();
+    } else {
+      alert('Pop-up blocked. Please allow pop-ups for printing or use the download option.');
     }
   };
 

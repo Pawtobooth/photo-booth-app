@@ -57,20 +57,40 @@ export async function generatePhotoLayout(
         const x = margin + col * (photoWidth + spacing);
         const y = margin + 80 + row * (photoHeight + spacing); // 80px from top for title space
         
-        // Draw photo with slight rounded corners
+        // Draw photo with slight rounded corners (fallback for older browsers)
         ctx.save();
-        ctx.beginPath();
-        ctx.roundRect(x, y, photoWidth, photoHeight, 8);
-        ctx.clip();
-        ctx.drawImage(img, x, y, photoWidth, photoHeight);
-        ctx.restore();
-        
-        // Add subtle border
-        ctx.strokeStyle = backgroundColor === "white" ? "#E0E0E0" : "#404040";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.roundRect(x, y, photoWidth, photoHeight, 8);
-        ctx.stroke();
+        try {
+          ctx.beginPath();
+          if (ctx.roundRect) {
+            ctx.roundRect(x, y, photoWidth, photoHeight, 8);
+          } else {
+            // Fallback for browsers without roundRect
+            ctx.rect(x, y, photoWidth, photoHeight);
+          }
+          ctx.clip();
+          ctx.drawImage(img, x, y, photoWidth, photoHeight);
+          ctx.restore();
+          
+          // Add subtle border
+          ctx.strokeStyle = backgroundColor === "white" ? "#E0E0E0" : "#404040";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          if (ctx.roundRect) {
+            ctx.roundRect(x, y, photoWidth, photoHeight, 8);
+          } else {
+            ctx.rect(x, y, photoWidth, photoHeight);
+          }
+          ctx.stroke();
+        } catch (error) {
+          // Simple fallback - just draw the image
+          ctx.restore();
+          ctx.drawImage(img, x, y, photoWidth, photoHeight);
+          
+          // Simple border
+          ctx.strokeStyle = backgroundColor === "white" ? "#E0E0E0" : "#404040";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x, y, photoWidth, photoHeight);
+        }
       });
     } else {
       // Draw photos in vertical strip
@@ -105,7 +125,7 @@ export async function generatePhotoLayout(
     const logoX = canvas.width - 40;
     const logoY = canvas.height - 20;
     
-    // Add logo background (white rounded rectangle)
+    // Add logo background (white rounded rectangle with fallback)
     const logoText = "Pawtobooth";
     const textMetrics = ctx.measureText(logoText);
     const logoWidth = textMetrics.width + 20;
@@ -113,8 +133,17 @@ export async function generatePhotoLayout(
     
     ctx.fillStyle = "#FFFFFF";
     ctx.beginPath();
-    ctx.roundRect(logoX - logoWidth, logoY - logoHeight, logoWidth, logoHeight, 15);
-    ctx.fill();
+    try {
+      if (ctx.roundRect) {
+        ctx.roundRect(logoX - logoWidth, logoY - logoHeight, logoWidth, logoHeight, 15);
+      } else {
+        ctx.rect(logoX - logoWidth, logoY - logoHeight, logoWidth, logoHeight);
+      }
+      ctx.fill();
+    } catch (error) {
+      // Simple fallback
+      ctx.fillRect(logoX - logoWidth, logoY - logoHeight, logoWidth, logoHeight);
+    }
     
     // Add logo text
     ctx.fillStyle = "#FF5722";
