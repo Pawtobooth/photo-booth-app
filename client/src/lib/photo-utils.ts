@@ -10,11 +10,11 @@ export async function generatePhotoLayout(
     throw new Error('Unable to get canvas context');
   }
 
-  // Set dimensions based on format
+  // Set dimensions based on format to match reference image
   if (format === "4r-grid") {
-    // 4R format: 6" x 4" at 300 DPI = 1800 x 1200 pixels
-    canvas.width = 1800;
-    canvas.height = 1200;
+    // 4R format: Portrait orientation like reference - 4" x 6" at 300 DPI = 1200 x 1800 pixels
+    canvas.width = 1200;
+    canvas.height = 1800;
   } else {
     // Photo strip: 2" x 6" at 300 DPI = 600 x 1800 pixels
     canvas.width = 600;
@@ -39,47 +39,86 @@ export async function generatePhotoLayout(
     const images = await Promise.all(photoDataUrls.map(loadImage));
 
     if (format === "4r-grid") {
-      // Draw photos in 2x2 grid
-      const photoWidth = (canvas.width - 60) / 2; // 30px margin, 30px between
-      const photoHeight = (canvas.height - 120) / 2; // 30px top/bottom margin, 30px between, 60px for logo
+      // Calculate dimensions for 2x2 grid with proper spacing like reference
+      const margin = 40; // Outer margin
+      const spacing = 20; // Space between photos
+      const logoSpace = 120; // Space reserved for logo at top and bottom
       
+      const availableWidth = canvas.width - (2 * margin) - spacing;
+      const availableHeight = canvas.height - logoSpace - (2 * margin) - spacing;
+      
+      const photoWidth = availableWidth / 2;
+      const photoHeight = availableHeight / 2;
+      
+      // Draw photos in 2x2 grid
       images.forEach((img, index) => {
         const row = Math.floor(index / 2);
         const col = index % 2;
-        const x = 30 + col * (photoWidth + 30);
-        const y = 30 + row * (photoHeight + 30);
+        const x = margin + col * (photoWidth + spacing);
+        const y = margin + 80 + row * (photoHeight + spacing); // 80px from top for title space
         
+        // Draw photo with slight rounded corners
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(x, y, photoWidth, photoHeight, 8);
+        ctx.clip();
         ctx.drawImage(img, x, y, photoWidth, photoHeight);
+        ctx.restore();
+        
+        // Add subtle border
+        ctx.strokeStyle = backgroundColor === "white" ? "#E0E0E0" : "#404040";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(x, y, photoWidth, photoHeight, 8);
+        ctx.stroke();
       });
     } else {
       // Draw photos in vertical strip
-      const photoWidth = canvas.width - 60; // 30px margins
-      const photoHeight = (canvas.height - 120) / 4; // 30px margins, 60px for logo
+      const photoWidth = canvas.width - 80; // 40px margins on each side
+      const photoHeight = (canvas.height - 160) / 4; // 80px top/bottom margins, 40px for logo
       
       images.forEach((img, index) => {
-        const y = 30 + index * photoHeight;
-        ctx.drawImage(img, 30, y, photoWidth, photoHeight);
+        const y = 80 + index * photoHeight;
+        ctx.drawImage(img, 40, y, photoWidth, photoHeight);
       });
     }
 
-    // Add Pawtobooth logo
+    // Add title at top (like "FOR YOU STUDIO" in reference)
+    ctx.fillStyle = backgroundColor === "white" ? "#333333" : "#FFFFFF";
+    ctx.font = "bold 36px Arial, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    
+    const titleText = "PAWTOBOOTH";
+    ctx.fillText(titleText, canvas.width / 2, 40);
+
+    // Add tagline below title
+    ctx.font = "16px Arial, sans-serif";
+    ctx.fillText("four dimensions of life", canvas.width / 2, 70);
+
+    // Add Pawtobooth logo at bottom right corner (like reference)
     ctx.fillStyle = "#FF5722";
-    ctx.font = "bold 24px Inter, sans-serif";
-    ctx.textAlign = "left";
+    ctx.font = "bold 18px Arial, sans-serif";
+    ctx.textAlign = "right";
     ctx.textBaseline = "bottom";
     
-    const logoText = "Pawtobooth";
-    const logoX = 30;
-    const logoY = canvas.height - 10;
+    const logoX = canvas.width - 40;
+    const logoY = canvas.height - 20;
     
-    ctx.fillText(logoText, logoX, logoY);
-
-    // Add tagline
-    ctx.fillStyle = backgroundColor === "white" ? "#666666" : "#CCCCCC";
-    ctx.font = "14px Inter, sans-serif";
-    const taglineText = "four dimensions of life";
+    // Add logo background (white rounded rectangle)
+    const logoText = "Pawtobooth";
     const textMetrics = ctx.measureText(logoText);
-    ctx.fillText(taglineText, logoX + textMetrics.width + 10, logoY);
+    const logoWidth = textMetrics.width + 20;
+    const logoHeight = 30;
+    
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.roundRect(logoX - logoWidth, logoY - logoHeight, logoWidth, logoHeight, 15);
+    ctx.fill();
+    
+    // Add logo text
+    ctx.fillStyle = "#FF5722";
+    ctx.fillText(logoText, logoX - 10, logoY - 8);
 
     return canvas.toDataURL('image/png', 1.0);
   } catch (error) {
