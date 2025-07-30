@@ -27,11 +27,8 @@ export default function CameraPreview({
     let count = 5;
     setCountdown(count);
     
-    // Initialize audio context on user interaction
-    initAudioContext();
-    
-    // Play initial countdown beep
-    setTimeout(() => playCountdownBeep(), 100);
+    // Play initial countdown beep immediately on user click
+    playCountdownBeep();
     
     const countdownInterval = setInterval(() => {
       count--;
@@ -45,25 +42,15 @@ export default function CameraPreview({
     }, 1000);
   };
 
-  const initAudioContext = () => {
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      if (audioContext.state === 'suspended') {
-        audioContext.resume();
-      }
-    } catch (error) {
-      console.log('Could not initialize audio context');
-    }
-  };
-
-  const playCountdownBeep = () => {
-    // Create countdown beep sound
+  const playCountdownBeep = async () => {
+    console.log('Playing countdown beep...');
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      // Resume audio context if suspended (required by some browsers)
+      // Resume audio context if suspended
       if (audioContext.state === 'suspended') {
-        audioContext.resume();
+        await audioContext.resume();
+        console.log('Audio context resumed');
       }
       
       const oscillator = audioContext.createOscillator();
@@ -72,26 +59,28 @@ export default function CameraPreview({
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      // Countdown beep - shorter and softer than camera sound
-      oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+      // Simple beep sound
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
       oscillator.type = 'sine';
       
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
       
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.15);
+      oscillator.stop(audioContext.currentTime + 0.2);
+      
+      console.log('Countdown beep played successfully');
     } catch (error) {
-      console.log('Audio context not available:', error);
-      // Fallback - try to beep using system sound
+      console.log('Web Audio API failed:', error);
+      // Simple fallback beep
       try {
-        // Create a short audio element as fallback
-        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJhfCeqbHHgdX4r4+x9rAn0Q==');
+        const audio = new Audio();
+        audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJhfCeqbHHgdX4r4+x9rAn0Q==';
         audio.volume = 0.3;
-        audio.play();
+        await audio.play();
+        console.log('Fallback beep played');
       } catch (e) {
-        console.log('Fallback audio also failed');
+        console.log('All audio methods failed:', e);
       }
     }
   };
@@ -120,51 +109,47 @@ export default function CameraPreview({
     }
   };
 
-  const playCameraSound = () => {
-    // Create camera shutter sound using Web Audio API
+  const playCameraSound = async () => {
+    console.log('Playing camera shutter sound...');
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      // Resume audio context if suspended (required by some browsers)
+      // Resume audio context if suspended
       if (audioContext.state === 'suspended') {
-        audioContext.resume();
+        await audioContext.resume();
+        console.log('Audio context resumed for camera sound');
       }
       
-      // Create a more realistic camera shutter sound
-      const oscillator1 = audioContext.createOscillator();
-      const oscillator2 = audioContext.createOscillator();
+      // Create camera shutter sound
+      const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
-      oscillator1.connect(gainNode);
-      oscillator2.connect(gainNode);
+      oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      // Two-tone shutter sound
-      oscillator1.frequency.setValueAtTime(1000, audioContext.currentTime);
-      oscillator1.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
-      oscillator1.type = 'square';
+      // Camera click sound
+      oscillator.frequency.setValueAtTime(1200, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
+      oscillator.type = 'square';
       
-      oscillator2.frequency.setValueAtTime(1200, audioContext.currentTime);
-      oscillator2.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.1);
-      oscillator2.type = 'sawtooth';
+      gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
       
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.4, audioContext.currentTime + 0.01);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.15);
       
-      oscillator1.start(audioContext.currentTime);
-      oscillator1.stop(audioContext.currentTime + 0.2);
-      oscillator2.start(audioContext.currentTime);
-      oscillator2.stop(audioContext.currentTime + 0.2);
+      console.log('Camera shutter sound played successfully');
     } catch (error) {
-      console.log('Audio context not available:', error);
-      // Fallback - try to play a simple beep
+      console.log('Web Audio API failed for camera sound:', error);
+      // Fallback beep
       try {
-        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiB');
+        const audio = new Audio();
+        audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJhfCeqbHHgdX4r4+x9rAn0Q==';
         audio.volume = 0.5;
-        audio.play();
+        await audio.play();
+        console.log('Fallback camera sound played');
       } catch (e) {
-        console.log('Fallback audio also failed');
+        console.log('All camera audio methods failed:', e);
       }
     }
   };
